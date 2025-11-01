@@ -31,6 +31,6 @@ jobs:
           git config --global user.email "sethmichaellarson@gmail.com"
 
           datetime=`date "+%Y-%-m-%-d"`
-          git add README.md data/
+          git add nintendo-classics.csv
           git commit -m "Updated data for $datetime"
           git push origin main --quiet
