@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Nintendo Classics new releases</title>
+    <link>https://github.com/sethmlarson/nintendo-classics</link>
+    <author>Seth Larson</author>
+    <pubDate>2025-10-30T00:00:00Z</pubDate>
+    <item>
+      <title>Luigi's Mansion is now available on Nintendo Classics</title>
+      <link>https://en.wikipedia.org/wiki/Nintendo_Classics</link>
+      <description>Luigi's Mansion (GameCube) is now available on Nintendo Classics</description>
+    </item>
+  </channel>
+</rss>

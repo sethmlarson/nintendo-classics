@@ -1,6 +1,7 @@
 import csv
 import datetime
 import re
+from textwrap import dedent
 
 import bs4
 import urllib3
@@ -29,6 +30,7 @@ systems = [
 
 games = []
 html = bs4.BeautifulSoup(content, "html.parser")
+latest_published_date = ""
 for table in html.find_all("table"):
     try:
         caption = [el.text.strip() for el in table.find_all("caption")][0]
@@ -60,6 +62,8 @@ for table in html.find_all("table"):
                 published_date = datetime.datetime.strptime(
                     published_at, "%B %d, %Y"
                 ).strftime("%Y-%m-%d")
+                if not latest_published_date or published_date > latest_published_date:
+                    latest_published_date = published_date
         else:
             game, publisher, *_ = tds
         publisher, _, _ = publisher.partition("[")
@@ -73,3 +77,45 @@ for table in html.find_all("table"):
 with open("nintendo-classics.csv", "w") as f:
     w = csv.writer(f)
     w.writerows(games)
+
+new_games = [game for game in games if game[0] == latest_published_date]
+
+
+def oxford_comma(x):
+    return f"{', '.join(x[:-1])}{',' if len(x) >= 3 else ''}{' and ' if len(x) >= 2 else ''}{x[-1]}"
+
+
+def is_are(x):
+    return "is" if len(x) == 1 else "are"
+
+
+with open("nintendo-classics.xml", "w") as f:
+    if len(new_games) < 5:
+        title = f"{oxford_comma([g[2] for g in new_games])} {is_are(new_games)} now available on Nintendo Classics"
+    else:
+        title = f"{len(new_games)} games now available on Nintendo Classics"
+    description = (
+        oxford_comma([f"{g[2]} ({g[1]})" for g in new_games])
+        + f" {is_are(new_games)} now available on Nintendo Classics"
+    )
+
+    f.write(
+        dedent(
+            f"""
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Nintendo Classics new releases</title>
+    <link>https://github.com/sethmlarson/nintendo-classics</link>
+    <author>Seth Larson</author>
+    <pubDate>{latest_published_date}T00:00:00Z</pubDate>
+    <item>
+      <title>{title}</title>
+      <link>https://en.wikipedia.org/wiki/Nintendo_Classics</link>
+      <description>{description}</description>
+    </item>
+  </channel>
+</rss>
+"""
+        ).strip()
+    )
