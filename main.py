@@ -74,6 +74,7 @@ for table in html.find_all("table"):
             game, _, _ = game.partition(" SP ")
         if "(removed" in game:
             game, _, _ = game.partition("(removed")
+            game = game.strip()
         games.append((published_date, platform, game, publisher))
 
 with open("nintendo-classics.csv", "w") as f:
