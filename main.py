@@ -72,6 +72,8 @@ for table in html.find_all("table"):
             game = game[:-3]
         elif " SP " in game:
             game, _, _ = game.partition(" SP ")
+        if "(removed" in game:
+            game, _, _ = game.partition("(removed")
         games.append((published_date, platform, game, publisher))
 
 with open("nintendo-classics.csv", "w") as f:
@@ -105,6 +107,7 @@ with open("nintendo-classics.xml", "w") as f:
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
+    <guid>{title}</guid>
     <title>Nintendo Classics new releases</title>
     <link>https://github.com/sethmlarson/nintendo-classics</link>
     <author>Seth Larson</author>
