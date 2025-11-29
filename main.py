@@ -107,12 +107,12 @@ with open("nintendo-classics.xml", "w") as f:
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <guid>{title}</guid>
     <title>Nintendo Classics new releases</title>
     <link>https://github.com/sethmlarson/nintendo-classics</link>
     <author>Seth Larson</author>
     <pubDate>{latest_published_date}T00:00:00Z</pubDate>
     <item>
+      <guid>{title}</guid>
       <title>{title}</title>
       <link>https://en.wikipedia.org/wiki/Nintendo_Classics</link>
       <description>{description}</description>
