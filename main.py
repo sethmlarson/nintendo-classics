@@ -64,9 +64,10 @@ for table in html.find_all("table"):
                         published_at, "%B %d, %Y"
                     ).strftime("%Y-%m-%d")
                 except ValueError:  # Sometimes 'announce' dates are pretty generic, like '2026'.
-                    continue
-                if not latest_published_date or published_date > latest_published_date:
-                    latest_published_date = published_date
+                    published_date = ""
+                else:
+                    if not latest_published_date or published_date > latest_published_date:
+                        latest_published_date = published_date
         else:
             game, publisher, *_ = tds
         publisher, _, _ = publisher.partition("[")
