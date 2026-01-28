@@ -28,6 +28,7 @@ systems = [
     "Virtual Boy",
 ]
 
+tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
 games = []
 html = bs4.BeautifulSoup(content, "html.parser")
 latest_published_date = ""
@@ -66,7 +67,7 @@ for table in html.find_all("table"):
                 except ValueError:  # Sometimes 'announce' dates are pretty generic, like '2026'.
                     published_date = ""
                 else:
-                    if not latest_published_date or published_date > latest_published_date:
+                    if (not latest_published_date or published_date > latest_published_date) and published_date <= tomorrow:
                         latest_published_date = published_date
         else:
             game, publisher, *_ = tds
