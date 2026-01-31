@@ -1,10 +1,12 @@
 import csv
 import datetime
 import re
+import typing
 from textwrap import dedent
 
 import bs4
 import urllib3
+import dataclasses
 
 http = urllib3.PoolManager(
     headers={"User-Agent": "https://sethmlarson.dev (sethmichaellarson@gmail.com)"}
@@ -28,7 +30,59 @@ systems = [
     "Virtual Boy",
 ]
 
-tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+
+@dataclasses.dataclass
+class RowSpan:
+    element: typing.Any
+    rowspan: int
+
+
+def iter_table_rows(
+    table: bs4.element.Element,
+) -> typing.Iterable[list[bs4.element.Element]]:
+    """Iterates over a <table> element rows,
+    handling rowspan but not colspan.
+    """
+    rowspans: dict[int, RowSpan] = {}
+    current_row = []
+    row_width = None
+    for tr in table.find_all("tr"):
+        tds = list(tr.find_all("td"))
+        if not tds:  # No <td> elements, skip.
+            continue
+        if row_width is None:
+            row_width = len(tds)
+        for i in range(len(current_row), row_width):
+            rowspan = rowspans.get(i, None)
+            if rowspan:
+                current_row.insert(i, rowspan.element)
+            elif not tds:  # Look for the next row.
+                continue
+            else:
+                td = tds.pop(0)
+                current_row.insert(i, td)
+                if "rowspan" in td.attrs:
+                    rowspan = RowSpan(td, int(td.attrs["rowspan"]))
+
+            # Increment the rowspan for this cell index.
+            if rowspan:
+                rowspan.rowspan -= 1
+                if rowspan.rowspan <= 0:
+                    rowspans.pop(i)
+                else:
+                    rowspans[i] = rowspan
+
+        # Row is complete, we should be empty
+        # of <td> elements here.
+        if len(current_row) == row_width:
+            yield current_row
+            assert len(tds) == 0
+            current_row = []
+
+    assert current_row == []
+
+
+tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 games = []
 html = bs4.BeautifulSoup(content, "html.parser")
 latest_published_date = ""
@@ -44,8 +98,8 @@ for table in html.find_all("table"):
         continue
 
     published_date = ""
-    for row in table.find_all("tr"):
-        tds = [td.text.strip() for td in row.find_all("td")]
+    for row in iter_table_rows(table):
+        tds = [td.text.strip() for td in row]
         if "GB" in tds:
             tds.remove("GB")
         if "GBC" in tds:
@@ -64,10 +118,15 @@ for table in html.find_all("table"):
                     published_date = datetime.datetime.strptime(
                         published_at, "%B %d, %Y"
                     ).strftime("%Y-%m-%d")
-                except ValueError:  # Sometimes 'announce' dates are pretty generic, like '2026'.
+                except (
+                    ValueError
+                ):  # Sometimes 'announce' dates are pretty generic, like '2026'.
                     published_date = ""
                 else:
-                    if (not latest_published_date or published_date > latest_published_date) and published_date <= tomorrow:
+                    if (
+                        not latest_published_date
+                        or published_date > latest_published_date
+                    ) and published_date <= tomorrow:
                         latest_published_date = published_date
         else:
             game, publisher, *_ = tds
@@ -80,7 +139,9 @@ for table in html.find_all("table"):
         if "(removed" in game:
             game, _, _ = game.partition("(removed")
             game = game.strip()
-        games.append((published_date, platform, game, publisher))
+        game_row = (published_date, platform, game, publisher)
+        if game_row not in games:
+            games.append(game_row)
 
 with open("nintendo-classics.csv", "w") as f:
     w = csv.writer(f)
